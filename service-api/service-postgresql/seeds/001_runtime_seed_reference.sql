@@ -1,0 +1,12 @@
+-- Praxis runtime seeding reference
+--
+-- A carga inicial da V1 e aplicada pelo AppSeeder em `service-csharp`
+-- para manter regras, hashes e dados referenciais alinhados com a aplicacao.
+--
+-- Dados carregados pelo runtime:
+-- - permissoes do OMS
+-- - roles base
+-- - usuario administrador
+-- - locais de estoque iniciais
+-- - categorias, fornecedores, produtos e clientes de exemplo
+-- - saldos iniciais de estoque

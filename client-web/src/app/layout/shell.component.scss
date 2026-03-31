@@ -1,0 +1,245 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.shell-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 2rem 1.5rem;
+  border-right: 1px solid var(--praxis-border);
+  background:
+    radial-gradient(circle at top left, rgba(255, 142, 81, 0.22), transparent 36%),
+    linear-gradient(180deg, rgba(6, 16, 25, 0.95), rgba(5, 13, 20, 0.9));
+  backdrop-filter: blur(24px);
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #041015;
+  background: linear-gradient(135deg, var(--praxis-accent), var(--praxis-sand));
+  box-shadow: 0 18px 40px rgba(255, 157, 87, 0.28);
+}
+
+.brand-lockup h1 {
+  margin: 0.15rem 0 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+}
+
+.sidebar-copy {
+  margin: 0 0 1.5rem;
+  color: var(--praxis-muted);
+  line-height: 1.6;
+}
+
+.nav-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  color: var(--praxis-text);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.nav-item:hover,
+.nav-item.is-active {
+  transform: translateX(4px);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-item strong,
+.nav-item small {
+  display: block;
+}
+
+.nav-item small {
+  color: var(--praxis-muted);
+  margin-top: 0.15rem;
+}
+
+.nav-dot {
+  flex: 0 0 11px;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-realtime {
+  margin-top: 1.5rem;
+}
+
+.feed-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.feed-item {
+  padding: 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.feed-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.feed-item p {
+  margin: 0.35rem 0 0;
+  color: var(--praxis-muted);
+}
+
+.shell-main {
+  min-width: 0;
+  padding: 1.5rem;
+}
+
+.shell-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.shell-topbar h2 {
+  margin: 0.2rem 0 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.65rem;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.branch-selector {
+  min-width: 220px;
+}
+
+.notifications-trigger {
+  position: relative;
+}
+
+.counter {
+  min-width: 1.6rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--praxis-text);
+}
+
+.user-pill {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.user-pill small {
+  color: var(--praxis-muted);
+}
+
+.notification-drawer {
+  margin-bottom: 1.25rem;
+}
+
+.notification-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.notification-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.notification-item__body p {
+  margin: 0.35rem 0 0.5rem;
+  color: var(--praxis-muted);
+}
+
+.shell-content.is-loading {
+  opacity: 0.85;
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell-sidebar {
+    position: relative;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--praxis-border);
+  }
+}
+
+@media (max-width: 820px) {
+  .shell-main {
+    padding: 1rem;
+  }
+
+  .shell-topbar {
+    flex-direction: column;
+  }
+
+  .notification-item {
+    grid-template-columns: 1fr;
+  }
+}

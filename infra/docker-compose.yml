@@ -1,0 +1,170 @@
+name: praxis
+
+services:
+  client-web:
+    container_name: praxis-client-web
+    build:
+      context: ..
+      dockerfile: ./infra/server/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      service-csharp:
+        condition: service_healthy
+    ports:
+      - "4300:80"
+    networks:
+      - praxis-network
+
+  service-postgresql:
+    image: postgres:15-alpine
+    container_name: praxis-service-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - praxis-postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+    networks:
+      - praxis-network
+
+  service-redis:
+    image: redis:7-alpine
+    container_name: praxis-service-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - praxis-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    networks:
+      - praxis-network
+
+  service-rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: praxis-service-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - praxis-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
+    networks:
+      - praxis-network
+
+  service-otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: praxis-service-otel-lgtm
+    restart: unless-stopped
+    ports:
+      - "3300:3000"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - praxis-network
+
+  service-csharp:
+    container_name: praxis-service-csharp
+    build:
+      context: ..
+      dockerfile: ./infra/server/csharp/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      service-postgresql:
+        condition: service_healthy
+      service-redis:
+        condition: service_healthy
+      service-rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__PraxisDatabase: Host=service-postgresql;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__Issuer: praxis.api
+      Jwt__Audience: praxis.clients
+      Jwt__SecretKey: ${JWT_SECRET}
+      Jwt__AccessTokenMinutes: 60
+      Redis__ConnectionString: service-redis:6379
+      RabbitMq__HostName: service-rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS}
+      OpenTelemetry__OtlpEndpoint: http://service-otel-lgtm:4317
+      Seed__AdminFullName: ${SEED_ADMIN_FULL_NAME}
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+    networks:
+      - praxis-network
+
+  service-csharp-worker:
+    container_name: praxis-service-csharp-worker
+    build:
+      context: ..
+      dockerfile: ./infra/server/csharp/Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      service-postgresql:
+        condition: service_healthy
+      service-redis:
+        condition: service_healthy
+      service-rabbitmq:
+        condition: service_healthy
+      service-csharp:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__PraxisDatabase: Host=service-postgresql;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__Issuer: praxis.api
+      Jwt__Audience: praxis.clients
+      Jwt__SecretKey: ${JWT_SECRET}
+      Jwt__AccessTokenMinutes: 60
+      Redis__ConnectionString: service-redis:6379
+      RabbitMq__HostName: service-rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS}
+      OpenTelemetry__OtlpEndpoint: http://service-otel-lgtm:4317
+      Seed__AdminFullName: ${SEED_ADMIN_FULL_NAME}
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD}
+    networks:
+      - praxis-network
+
+volumes:
+  praxis-postgresql-data:
+  praxis-redis-data:
+  praxis-rabbitmq-data:
+
+networks:
+  praxis-network:
+    driver: bridge

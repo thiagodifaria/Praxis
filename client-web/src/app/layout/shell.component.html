@@ -1,0 +1,155 @@
+<div class="shell">
+  <aside class="shell-sidebar">
+    <div class="brand-lockup">
+      <div class="brand-mark">PX</div>
+      <div>
+        <p class="eyebrow">Operational Management Suite</p>
+        <h1>Praxis</h1>
+      </div>
+    </div>
+
+    <p class="sidebar-copy">
+      OMS corporativo com controle comercial, suprimentos, financeiro e governanca operacional em tempo real.
+    </p>
+
+    <nav class="nav-list">
+      <a
+        *ngFor="let item of visibleNavigation()"
+        [routerLink]="item.route"
+        routerLinkActive="is-active"
+        class="nav-item"
+      >
+        <span class="nav-dot" [style.background]="item.accent"></span>
+        <span>
+          <strong>{{ item.label }}</strong>
+          <small>{{ item.description }}</small>
+        </span>
+      </a>
+    </nav>
+
+    <section class="sidebar-realtime panel subtle-panel">
+      <div class="section-title compact">
+        <div>
+          <p class="eyebrow">Realtime</p>
+          <h3>Pulse Feed</h3>
+        </div>
+        <span class="badge" [ngClass]="realtime.connected() ? 'tone-good' : 'tone-warn'">
+          {{ realtime.connected() ? 'Conectado' : 'Reconectando' }}
+        </span>
+      </div>
+
+      <div class="feed-list">
+        <article class="feed-item" *ngFor="let item of liveFeed().slice(0, 4)">
+          <div class="feed-item__header">
+            <span class="badge" [ngClass]="toneForStatus(item.severity, notificationSeverityLabels)">
+              {{ formatStatus(item.severity, notificationSeverityLabels) }}
+            </span>
+            <small>{{ formatDateTime(item.publishedAtUtc) }}</small>
+          </div>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.message }}</p>
+        </article>
+
+        <p class="empty-state" *ngIf="!liveFeed().length">
+          O fluxo ao vivo aparece aqui conforme RabbitMQ e SignalR publicam eventos do backend.
+        </p>
+      </div>
+    </section>
+  </aside>
+
+  <div class="shell-main">
+    <header class="shell-topbar">
+      <div>
+        <p class="eyebrow">Workspace</p>
+        <h2>Controle operacional centralizado</h2>
+      </div>
+
+      <div class="topbar-actions">
+        <label class="field branch-selector">
+          <span>Filial ativa</span>
+          <select
+            [ngModel]="selectedBranchId()"
+            (ngModelChange)="changeBranch($event)"
+            name="branchId"
+          >
+            <option [ngValue]="null">Todas as filiais</option>
+            <option *ngFor="let branch of branches()" [ngValue]="branch.id">
+              {{ branch.code }} · {{ branch.name }}
+            </option>
+          </select>
+        </label>
+
+        <button type="button" class="button button-ghost" (click)="refreshWorkspace()">
+          Atualizar
+        </button>
+
+        <button type="button" class="button button-secondary notifications-trigger" (click)="toggleNotificationDrawer()">
+          Notificacoes
+          <span class="counter">{{ unreadCount() }}</span>
+        </button>
+
+        <div class="user-pill">
+          <strong>{{ auth.userName() }}</strong>
+          <small>{{ auth.user()?.role || 'operator' }}</small>
+        </div>
+
+        <button type="button" class="button" (click)="logout()">Sair</button>
+      </div>
+    </header>
+
+    <section class="notification-drawer panel" *ngIf="notificationDrawerOpen()">
+      <div class="section-title compact">
+        <div>
+          <p class="eyebrow">Event Stream</p>
+          <h3>Inbox operacional</h3>
+        </div>
+
+        <div class="inline-actions">
+          <button type="button" class="button button-ghost" (click)="markAllRead()">
+            Marcar tudo
+          </button>
+          <button type="button" class="button button-ghost" (click)="toggleNotificationDrawer()">
+            Fechar
+          </button>
+        </div>
+      </div>
+
+      <div class="notification-list">
+        <article class="notification-item" *ngFor="let item of notifications()">
+          <div class="notification-item__meta">
+            <span class="badge" [ngClass]="toneForStatus(item.severity, notificationSeverityLabels)">
+              {{ formatStatus(item.severity, notificationSeverityLabels) }}
+            </span>
+            <span class="badge" [ngClass]="item.isRead ? 'tone-neutral' : 'tone-info'">
+              {{ item.isRead ? 'Lida' : 'Nova' }}
+            </span>
+            <small>{{ branchScopedLabel(item.branchName) }}</small>
+          </div>
+
+          <div class="notification-item__body">
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.message }}</p>
+            <small>{{ formatDateTime(item.publishedAtUtc) }} · {{ item.routingKey }}</small>
+          </div>
+
+          <button
+            type="button"
+            class="button button-ghost"
+            (click)="markAsRead(item.id)"
+            *ngIf="!item.isRead"
+          >
+            Marcar lida
+          </button>
+        </article>
+
+        <p class="empty-state" *ngIf="!notifications().length">
+          Nenhuma notificacao no momento.
+        </p>
+      </div>
+    </section>
+
+    <main class="shell-content" [class.is-loading]="loading()">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

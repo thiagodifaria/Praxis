@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/.vs/
+**/.idea/
+**/node_modules/
+
+infra/.env
+service-api/service-csharp/.config/
+tutorial.md
+planejamento.md
+PLANEJAMENTO.md

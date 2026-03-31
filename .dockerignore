@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/.vs/
+**/.idea/
+**/node_modules/
+.git
+.gitignore
