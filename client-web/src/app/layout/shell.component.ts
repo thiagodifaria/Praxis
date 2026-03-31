@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AuthStore } from '../core/auth.store';
 import { Branch, FeatureFlag, NotificationItem } from '../core/app.models';
@@ -25,6 +25,7 @@ export class ShellComponent {
   readonly realtime = inject(RealtimeService);
 
   readonly loading = signal(false);
+  readonly currentUrl = signal(this.router.url);
   readonly branches = signal<Branch[]>([]);
   readonly featureFlags = signal<FeatureFlag[]>([]);
   readonly notifications = signal<NotificationItem[]>([]);
@@ -36,6 +37,38 @@ export class ShellComponent {
   );
 
   readonly unreadCount = computed(() => this.notifications().filter((item) => !item.isRead).length);
+  readonly activeNavigation = computed(() => {
+    const current = this.currentUrl();
+    return this.visibleNavigation().find((item) => current === item.route || current.startsWith(`${item.route}/`))
+      ?? this.visibleNavigation()[0]
+      ?? null;
+  });
+  readonly activeNavigationLabel = computed(() => this.activeNavigation()?.label ?? 'Workspace');
+  readonly activeNavigationDescription = computed(() => this.activeNavigation()?.description ?? 'Controle operacional centralizado');
+  readonly activeBranchName = computed(() => {
+    const branchId = this.selectedBranchId();
+    if (!branchId) {
+      return 'Rede inteira';
+    }
+
+    return this.branches().find((item) => item.id === branchId)?.name ?? 'Filial ativa';
+  });
+  readonly userInitials = computed(() =>
+    this.auth.userName()
+      .split(' ')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join(''),
+  );
+  readonly currentDateLabel = computed(() =>
+    new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date()),
+  );
 
   readonly liveFeed = computed(() =>
     this.realtime.liveMessages().filter((message) => {
@@ -51,6 +84,12 @@ export class ShellComponent {
   readonly branchScopedLabel = branchScopedLabel;
 
   constructor() {
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        this.currentUrl.set(event.urlAfterRedirects);
+      });
+
     effect(() => {
       const branchId = this.auth.activeBranchId();
       this.selectedBranchId.set(branchId);

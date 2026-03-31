@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@fontsource/poppins": "^5.2.7",
     "@fontsource/space-grotesk": "^5.2.10",
     "@microsoft/signalr": "^10.0.0",
     "rxjs": "~7.8.0",
